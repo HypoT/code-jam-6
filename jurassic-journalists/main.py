@@ -12,11 +12,19 @@ from kivy.properties import ListProperty, ObjectProperty, NumericProperty
 from math import sin, cos, pi
 from kivy.core.window import Window
 
-# Global Variable so there is no magic number.
+# Global Variables
+
+# Screen Dimensions
 SCREEN_WIDTH = 720
 SCREEN_HEIGHT = 720
-PAPER_COLOR = (200, 200, 200, 0)
-STARTING_Y = SCREEN_HEIGHT - 150
+
+# Paper Dimensions
+PAPER_WIDTH = 595
+PAPER_HEIGHT = 842
+
+STARTING_X = PAPER_WIDTH-240
+STARTING_Y = PAPER_HEIGHT+100
+
 
 
 class JurassicJournalistApp(App):
@@ -52,11 +60,17 @@ class TextPaper(Image):
         super().__init__(*args, **kwargs)
 
         # Creating Blank Paper image to type on.
-        self.img = Im.new("RGBA", (SCREEN_WIDTH, SCREEN_HEIGHT), PAPER_COLOR)
+#        self.img = Im.new("RGBA", (SCREEN_WIDTH, SCREEN_HEIGHT), PAPER_COLOR)
+        self.img = Im.open("paper.jpg")
+        self.default_pos = [250, 250]
 
         # Type writer does not type from the top rather type from the bottom.
         self.txt = self.img.copy()
-        self.head = {'x': 0, 'y': STARTING_Y}
+        self.head = {'x': STARTING_X, 'y': STARTING_Y}
+        self.pos = self.default_pos
+        self.size = [PAPER_WIDTH, PAPER_HEIGHT]
+
+        self.first_letter = True
 
         """
         self.mesh_texture = CoreImage('paper.png').texture
@@ -81,15 +95,28 @@ class TextPaper(Image):
         """ Type on the paper """
         # Drawing on the image
         ImageDraw.Draw(self.txt).text((self.head["x"], self.head["y"]),
-                                      key.char, font=key.font, fill=key.color)
+                                      key.char, font=key.font, fill=128)
         # Scrolling up
+
+        # Shoudln't move paper if it is the first letter of the line
+        if self.first_letter:
+            self.first_letter = False
+        else:
+            self.pos[0] -= (self.char_size-10)
+
         self.font_size = key.font.getsize("l")[1]
         self.char_size = key.get_kerning()[0]
         self.head["x"] += self.char_size
 
-        if self.head["x"] + self.char_size >= SCREEN_WIDTH:
-            self.head["x"] = 0
-            self.head["y"] -= self.font_size
+        if (self.head["x"] - STARTING_X) + self.char_size >= PAPER_WIDTH:
+            self.head["x"] = STARTING_X
+            self.head["y"] += self.font_size
+
+            # 10 is to adjust the height. If you guys can investigate why it is not 
+            # matching the height and width of letter defined in kv file that would be great.
+            line_height = self.head["y"] - STARTING_Y - 10
+            self.pos = [self.default_pos[0], self.default_pos[1]+line_height]
+            self.first_letter = True
 
     def escaped(self):
         if not self.font_size:
