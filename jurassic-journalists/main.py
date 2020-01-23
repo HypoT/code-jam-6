@@ -111,11 +111,12 @@ class TextPaper(Image):
         if (self.head["x"] - STARTING_X) + self.char_size >= PAPER_WIDTH:
             self.head["x"] = STARTING_X
             self.head["y"] += self.font_size
+            self.y += self.font_size
 
             # 10 is to adjust the height. If you guys can investigate why it is not 
             # matching the height and width of letter defined in kv file that would be great.
             line_height = self.head["y"] - STARTING_Y - 10
-            self.pos = [self.default_pos[0], self.default_pos[1]+line_height]
+            self.pos = [self.default_pos[0], self.default_pos[1] + line_height]
             self.first_letter = True
 
     def escaped(self):
@@ -124,8 +125,10 @@ class TextPaper(Image):
         if self.text[-2:] == '_b':
             self.head["x"] -= self.char_size
         elif self.text[-2:] == '_n':
-            self.head['y'] -= self.font_size
-            self.head['x'] = 0
+            self.head['y'] += self.font_size
+            self.head['x'] = STARTING_X
+            self.y += self.font_size
+
 
 class PhoneButtons(Label):
     ''' Phone Button/Label '''
@@ -150,4 +153,5 @@ class PhoneButtons(Label):
         return True
 
 
-JurassicJournalistApp().run()
+if __name__ == "__main__":
+    JurassicJournalistApp().run()
